@@ -1,35 +1,40 @@
-import 'dart:convert';
+
 import 'dart:ui';
 
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:giki_tuc/apis/burgers_api.dart';
+import 'package:giki_tuc/controllers/cart_controller.dart';
+import 'package:giki_tuc/controllers/dark_theme_controller.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:http/http.dart' as http;
 import '../../cart.dart';
-import '../../home_page.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-import '../home_page.dart';
 
+// Functions
+Color getColor(Set<MaterialState> states) {
+  const Set<MaterialState> interactiveStates = <MaterialState>{
+    MaterialState.pressed,
+    MaterialState.hovered,
+    MaterialState.focused,
+  };
+  if (states.any(interactiveStates.contains)) {
+    return Colors.blue;
+  }
+  return Colors.green;
+}
 class Burgers extends StatefulWidget {
   Burgers({Key? key}) : super(key: key);
 
   @override
-  _BurgersState createState() => _BurgersState();
+  BurgersState createState() => BurgersState();
 }
 
-class _BurgersState extends State<Burgers> {
-
-  //List Variables
-  List<bool> _cheese = [];
-  List<bool> _fries = [];
-  List<bool> _dropdown = [];
-  List<int> _counters = [];
-  List<int> _burgers = [];
-  List burgers = [];
-
-  int _total_items = 0;
+class BurgersState extends State<Burgers> {
+  List<int> tempCounter = [];
   bool _initialized = false;
   late Future<Burger> futureBurgers;
 
@@ -39,67 +44,49 @@ class _BurgersState extends State<Burgers> {
     futureBurgers = fetchBurgers();
   }
 
-  // Functions
-  Color getColor(Set<MaterialState> states) {
-    const Set<MaterialState> interactiveStates = <MaterialState>{
-      MaterialState.pressed,
-      MaterialState.hovered,
-      MaterialState.focused,
-    };
-    if (states.any(interactiveStates.contains)) {
-      return Colors.blue;
-    }
-    return Colors.green;
-  }
+
   @override
   Widget build(BuildContext context) {
-
+    final cartController = Get.find<CartController>();
+    final darkThemeController = Get.find<DarkThemeController>();
     return FutureBuilder<Burger>(
         future: futureBurgers,
         builder: (context, snapshot)
     {
       if (snapshot.hasData) {
-        burgers = snapshot.data!.items;
+        cartController.burgerType = snapshot.data!.items;
         if (!_initialized) {
-          for (int i = 0; i < burgers.length; i++) {
-            _cheese.add(false);
-            _fries.add(false);
-            _dropdown.add(false);
-            _counters.add(0);
-            _burgers.add(0);
+          for (int i = 0; i < cartController.burgerType.length; i++) {
+            cartController.cheese.add([false]);
+            cartController.fries.add([false]);
+            cartController.dropdownBurger.add(false);
+            cartController.countersBurger.add(0);
+            cartController.burgers.add(0);
             _initialized = true;
           }
         }
         return WillPopScope(
           onWillPop: () async => false,
-          child: Scaffold(
-              backgroundColor: darkMode ? Colors.black : Colors.white,
+          child: Obx(() => Scaffold(
+              backgroundColor: darkThemeController.darkMode.value ? Colors.black : Colors.white,
               appBar: AppBar(
                 leading: IconButton(
                   icon: Icon(
                       Icons.arrow_back
                   ),
                   onPressed: () {
-                    for(int i=0;i<burgers.length;i++)
-                      collector.add({
-                        '$i': '${burgers[i]}',
-                        'ordered' : '${_burgers[i]}',
-                        'cheese': '${_cheese[i]}',
-                        'fries': '${_fries[i]}',
-                        'total': '$_total_items'
-                      });
                     Navigator.of(context).pop();
                   },
                 ),
                 iconTheme: const IconThemeData(color: Colors.green),
                 // shadowColor: Colors.grey[500],
                 elevation: 0.5,
-                shadowColor: darkMode ? Colors.white : Colors.black,
+                shadowColor: darkThemeController.darkMode.value ? Colors.white : Colors.black,
                 title: Text(
-                  'Burgers',
+                  'burgers',
                   style: TextStyle(
                       fontFamily: 'Headings',
-                      color: darkMode ? Colors.white : Colors.black),
+                      color: darkThemeController.darkMode.value ? Colors.white : Colors.black),
                 ),
                 actions: [
                   IconButton(
@@ -110,31 +97,24 @@ class _BurgersState extends State<Burgers> {
                     focusColor: Colors.transparent,
                     onPressed: () {
                       setState(() {
-                        darkMode = !darkMode;
+                        darkThemeController.darkMode.value = !darkThemeController.darkMode.value;
                       });
                     },
                     icon: Icon(
-                      darkMode ? Icons.wb_sunny_outlined : Icons.wb_sunny,
-                      color: darkMode ? Colors.white : Colors.black,
+                      darkThemeController.darkMode.value ? Icons.wb_sunny_outlined : Icons.wb_sunny,
+                      color: darkThemeController.darkMode.value ? Colors.white : Colors.black,
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Badge(
-                      badgeContent: Text(_total_items.toString()),
+                      badgeContent: Obx( () => Text(cartController.total_items.value.toString())),
                       position: BadgePosition.topEnd(end: 0),
                       elevation: 0,
-                      child: IconButton(icon: Icon(
+                      child: IconButton(
+                        icon: Icon(
                         Icons.shopping_cart_outlined,),
                         onPressed: () {
-                        for(int i=0;i<burgers.length;i++)
-                          collector.add({
-                            '$i': '${burgers[i]}',
-                            'ordered' : '${_burgers[i]}',
-                            'cheese': '${_cheese[i]}',
-                            'fries': '${_fries[i]}',
-                            'total': '$_total_items'
-                          });
                           Navigator.push(context,
                               PageTransition(
                                   child: Cart(), type: PageTransitionType.fade));
@@ -143,44 +123,44 @@ class _BurgersState extends State<Burgers> {
                   )
                 ],
                 centerTitle: true,
-                backgroundColor: darkMode ? Colors.black : Colors.white,
+                backgroundColor: darkThemeController.darkMode.value ? Colors.black : Colors.white,
               ),
               body: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: ListView(
                         children: [
-                          for(int i = 0; i < burgers.length; i++)
+                          for(int i = 0; i < cartController.burgerType.length; i++)
                             ListTile(
                               title: AnimatedCrossFade(
                                 duration: const Duration(milliseconds: 500),
-                                crossFadeState: _dropdown.elementAt(i)
+                                crossFadeState: cartController.dropdownBurger.elementAt(i)
                                     ? CrossFadeState.showSecond
                                     : CrossFadeState.showFirst,
                                 firstChild: Column(
                                     mainAxisSize: MainAxisSize.min, children: [
                                   ListTile(
                                     leading: Image.network(
-                                      burgers[i]['photo_url'],
+                                      cartController.burgerType[i]['photo_url'],
                                     ),
                                     title: Text(
-                                      burgers[i]['name'],
+                                      cartController.burgerType[i]['name'],
                                       style: TextStyle(
                                           fontFamily: 'Description_Text',
-                                          color: darkMode ? Colors.white : Colors
+                                          color: darkThemeController.darkMode.value ? Colors.white : Colors
                                               .black),
                                     ),
                                     subtitle: Text(
-                                      'Price: Rs.${burgers[i]['price']}/- only',
+                                      'Price: Rs.${cartController.burgerType[i]['price']}/- only',
                                       style: TextStyle(
                                           fontFamily: 'Description_Text',
-                                          color: darkMode ? Colors.white : Colors
+                                          color: darkThemeController.darkMode.value ? Colors.white : Colors
                                               .black),
                                     ),
                                     trailing: Icon(
-                                      _dropdown.elementAt(i)
+                                      cartController.dropdownBurger.elementAt(i)
                                           ? Icons.arrow_drop_up_outlined
                                           : Icons.arrow_drop_down_outlined,
-                                      color: darkMode ? Colors.white : Colors
+                                      color: darkThemeController.darkMode.value ? Colors.white : Colors
                                           .black,
                                     ),
                                     contentPadding: EdgeInsets.zero,
@@ -193,38 +173,38 @@ class _BurgersState extends State<Burgers> {
                                 Column(mainAxisSize: MainAxisSize.min, children: [
                                   ListTile(
                                     leading: Image.network(
-                                      burgers[i]['photo_url'],
+                                      cartController.burgerType[i]['photo_url'],
                                     ),
                                     title: Text(
-                                      burgers[i]['name'],
+                                      cartController.burgerType[i]['name'],
                                       style: TextStyle(
                                           fontFamily: 'Description_Text',
-                                          color: darkMode ? Colors.white : Colors
+                                          color: darkThemeController.darkMode.value ? Colors.white : Colors
                                               .black),
                                     ),
                                     subtitle: Text(
-                                      'Price: Rs.${burgers[i]['price']}/- only',
+                                      'Price: Rs.${cartController.burgerType[i]['price']}/- only',
                                       style: TextStyle(
                                           fontFamily: 'Description_Text',
-                                          color: darkMode ? Colors.white : Colors
+                                          color: darkThemeController.darkMode.value ? Colors.white : Colors
                                               .black),
                                     ),
                                     trailing: Icon(
-                                      _dropdown.elementAt(i)
+                                      cartController.dropdownBurger.elementAt(i)
                                           ? Icons.arrow_drop_up_outlined
                                           : Icons.arrow_drop_down_outlined,
-                                      color: darkMode ? Colors.white : Colors
+                                      color: darkThemeController.darkMode.value ? Colors.white : Colors
                                           .black,
                                     ),
                                     contentPadding: EdgeInsets.zero,
                                   ),
                                   ListTile(
                                     title: Text(
-                                      burgers[i]['description'],
+                                      cartController.burgerType[i]['description'],
                                       textAlign: TextAlign.justify,
                                       style: TextStyle(
                                           fontFamily: 'Description_Text',
-                                          color: darkMode ? Colors.white : Colors
+                                          color: darkThemeController.darkMode.value ? Colors.white : Colors
                                               .black),
                                     ),
                                     subtitle: Row(
@@ -235,27 +215,31 @@ class _BurgersState extends State<Burgers> {
                                           'Add to Cart',
                                           style: TextStyle(
                                               fontFamily: 'Description_Text',
-                                              color: darkMode
+                                              color: darkThemeController.darkMode.value
                                                   ? Colors.white
                                                   : Colors.black),
                                         ),
                                         ElevatedButton(
                                           onPressed: () {
                                             setState(() {
-                                              if (!(_burgers[i] - 1 < 0)) {
-                                                _burgers[i]--;
-                                                _total_items --;
-                                                if (burgers[i] == 0) {
-                                                  _cheese[i] = false;
-                                                  _fries[i] = false;
+                                              if (!(cartController.burgers[i] - 1 < 0)) {
+                                                cartController.burgers[i]--;
+                                                cartController.burgers[i] == 0? cartController.countersBurger[i] = 0: cartController.countersBurger[i] == 0? cartController.countersBurger[i] = 0: cartController.countersBurger[i]--;
+                                                cartController.cheese.remove(i);
+                                                cartController.fries.remove(i);
+                                                cartController.decrement();
+                                                if (cartController.burgerType[i] == 0) {
+                                                  cartController.cheese[i][cartController.countersBurger[i]] = false;
+                                                  cartController.fries[i][cartController.countersBurger[i]] = false;
                                                 }
                                               }
                                             });
                                           },
                                           onLongPress: () {
                                             setState(() {
-                                              _total_items -= _burgers[i];
-                                              _burgers[i] = 0;
+                                              cartController.decrementValue(cartController.burgers[i]);
+                                              cartController.burgers[i] = 0;
+                                              cartController.countersBurger[i] = 0;
                                             });
                                           },
                                           child: Text(
@@ -263,30 +247,37 @@ class _BurgersState extends State<Burgers> {
                                             style: TextStyle(
                                                 fontFamily: 'Description_Text',
                                                 color:
-                                                darkMode ? Colors.white : Colors
+                                                darkThemeController.darkMode.value ? Colors.white : Colors
                                                     .black),
                                           ),
                                           style: ElevatedButton.styleFrom(
                                               primary:
-                                              darkMode ? Colors.black : Colors
+                                              darkThemeController.darkMode.value ? Colors.black : Colors
                                                   .white),
                                         ),
-                                        Text(
-                                          _burgers[i].toString(),
+                                        Obx( () =>Text(
+                                          cartController.burgers[i].toString(),
                                           style: TextStyle(
                                               fontFamily: 'Description_Text',
-                                              color: darkMode
+                                              color: darkThemeController.darkMode.value
                                                   ? Colors.white
                                                   : Colors.black),
-                                        ),
+                                        )),
                                         ElevatedButton(
                                           onPressed: () {
                                             setState(() {
-                                              _burgers[i]++;
-                                              _total_items++;
-                                              if (_burgers[i] == 1) {
-                                                _cheese[i] = false;
-                                                _fries[i] = false;
+                                              cartController.burgers[i]++;
+                                                cartController.increment();
+                                              if (cartController.burgers[i] == 1) {
+                                                cartController.countersBurger[i] = 0;
+                                                cartController.cheese[i][cartController.countersBurger[i]] = false;
+                                                cartController.fries[i][cartController.countersBurger[i]] = false;
+                                              }
+                                              else{
+                                                cartController.cheese[i]
+                                                    .add(false);
+                                                cartController.fries[i]
+                                                    .add(false);
                                               }
                                             });
                                           },
@@ -295,12 +286,12 @@ class _BurgersState extends State<Burgers> {
                                             style: TextStyle(
                                                 fontFamily: 'Description_Text',
                                                 color:
-                                                darkMode ? Colors.white : Colors
+                                                darkThemeController.darkMode.value ? Colors.white : Colors
                                                     .black),
                                           ),
                                           style: ElevatedButton.styleFrom(
                                               primary:
-                                              darkMode ? Colors.black : Colors
+                                              darkThemeController.darkMode.value ? Colors.black : Colors
                                                   .white),
                                         ),
                                       ],
@@ -308,8 +299,59 @@ class _BurgersState extends State<Burgers> {
                                     contentPadding: EdgeInsets.zero,
                                   ),
                                   ListTile(
-                                    title: _burgers[i] > 0 ? Column(
+                                    title: cartController.burgers[i] > 0 ? Column(
                                       children: [
+                                        Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                setState(() {
+                                                  if(cartController.countersBurger[i] == 0)
+                                                    cartController.countersBurger[i] = 0;
+                                                  else
+                                                  cartController.countersBurger[i]--;
+
+                                                });
+
+                                              },
+                                              child: Icon(
+                                                Icons.arrow_left_outlined,
+                                                color: darkThemeController.darkMode.value ? Colors.white : Colors.black
+                                              ),
+                                              style: ElevatedButton.styleFrom(
+                                                  primary:
+                                                  darkThemeController.darkMode.value ? Colors.black : Colors
+                                                      .white),
+                                            ),
+                                            Obx( () => Text('Preference for ${cartController.countersBurger[i]+1}',
+                                              style: TextStyle(
+                                                  fontFamily: 'Description_Text',
+                                                  color:
+                                                  darkThemeController.darkMode.value ? Colors.white : Colors
+                                                      .black),)),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                setState(() {
+                                                  if(cartController.countersBurger[i] >= cartController.burgers[i] - 1)
+                                                    cartController.countersBurger[i] = cartController.burgers[i] - 1;
+                                                  else
+                                                  cartController.countersBurger[i]++;
+                                                });
+
+                                              },
+                                              child: Icon(
+                                                  Icons.arrow_right_outlined,
+                                                  color: darkThemeController.darkMode.value ? Colors.white : Colors.black
+                                              ),
+                                              style: ElevatedButton.styleFrom(
+                                                  primary:
+                                                  darkThemeController.darkMode.value ? Colors.black : Colors
+                                                      .white),
+                                            ),
+                                          ],
+                                        ),
                                         Row(
                                           children: [
                                             Checkbox(
@@ -317,17 +359,18 @@ class _BurgersState extends State<Burgers> {
                                                 fillColor:
                                                 MaterialStateProperty.resolveWith(
                                                     getColor),
-                                                value: _cheese[i],
+                                                value: cartController.cheese[i][cartController.countersBurger[i]],
                                                 onChanged: (bool? value) {
                                                   setState(() {
-                                                    _cheese[i] = value!;
+                                                    cartController.cheese[i][cartController.countersBurger[i]] = value!;
+                                                    print(cartController.cheese);
                                                   });
                                                 }),
                                             Text('Cheese\t +Rs.30/-',
                                               style: TextStyle(
                                                   fontFamily: 'Description_Text',
                                                   color:
-                                                  darkMode ? Colors.white : Colors
+                                                  darkThemeController.darkMode.value ? Colors.white : Colors
                                                       .black),
                                             )
                                           ],
@@ -339,17 +382,18 @@ class _BurgersState extends State<Burgers> {
                                                 fillColor:
                                                 MaterialStateProperty.resolveWith(
                                                     getColor),
-                                                value: _fries[i],
+                                                value: cartController.fries[i][cartController.countersBurger[i]],
                                                 onChanged: (bool? value) {
                                                   setState(() {
-                                                    _fries[i] = value!;
+                                                    cartController.fries[i][cartController.countersBurger[i]] = value!;
+                                                    print(cartController.fries);
                                                   });
                                                 }),
                                             Text('Fries\t +Rs.50/-',
                                               style: TextStyle(
                                                   fontFamily: 'Description_Text',
                                                   color:
-                                                  darkMode ? Colors.white : Colors
+                                                  darkThemeController.darkMode.value ? Colors.white : Colors
                                                       .black),
                                             )
                                           ],
@@ -365,16 +409,16 @@ class _BurgersState extends State<Burgers> {
                               ),
                               onTap: () {
                                 setState(() {
-                                  _dropdown[i] = !_dropdown.elementAt(i);
-                                  for (int j = 0; j < _dropdown.length; j++)
+                                  cartController.dropdownBurger[i] = !cartController.dropdownBurger.elementAt(i);
+                                  for (int j = 0; j < cartController.dropdownBurger.length; j++)
                                     if (j != i)
-                                      _dropdown[j] = false;
+                                      cartController.dropdownBurger[j] = false;
                                 });
                               },
                             )
                         ],
                       ),
-              )),
+              ))),
         );
       }
       else if (snapshot.hasError) {
@@ -382,7 +426,7 @@ class _BurgersState extends State<Burgers> {
       }
       // By default, show a loading spinner.
       return SpinKitThreeBounce(
-        color: darkMode? Colors.white:Colors.black,
+        color: darkThemeController.darkMode.value? Colors.white:Colors.black,
         size: 40.0,
       );
     }

@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
-Future<Burger> fetchBurgers() async {
-  var url = Uri.parse('http://10.0.2.2:3000/burgers');
+Future<IceCream> fetchIceCreams() async {
+  var url = Uri.parse('http://10.0.2.2:3000/icecreams');
   final response = await http
       .get(url, headers: {
     'Content-Type': 'application/json; charset=UTF-8',
@@ -12,7 +12,7 @@ Future<Burger> fetchBurgers() async {
     // If the server did return a 200 OK response,
     // then parse the JSON.
 
-    return Burger.fromJson(jsonDecode(response.body));
+    return IceCream.fromJson(jsonDecode(response.body));
   }
   else {
     // If the server did not return a 200 OK response,
@@ -21,13 +21,12 @@ Future<Burger> fetchBurgers() async {
   }
 }
 
-class Burger extends GetxController{
+class IceCream extends GetxController{
   List items = [].obs;
-  Burger({required this.items});
-  factory Burger.fromJson(List json) {
-    return Burger(
+  IceCream({required this.items});
+  factory IceCream.fromJson(List json) {
+    return IceCream(
         items: json
     );
   }
 }
-

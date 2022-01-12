@@ -1,12 +1,11 @@
-import 'dart:ffi';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/src/extension_instance.dart';
 import 'package:giki_tuc/categories/burgers.dart';
 import 'package:giki_tuc/categories/pizzas.dart';
+import 'package:giki_tuc/controllers/dark_theme_controller.dart';
 import 'package:page_transition/page_transition.dart';
-
-import '../home_page.dart';
 
 // Press CTRL+o to check more overrides
 
@@ -15,9 +14,9 @@ class DataSearch extends SearchDelegate<String> {
   final items = [
     'Zinger Burger',
     'Jalapeno Burger',
-    'Grilled Burger',
-    'Mexican Pizza',
-    'Cheese Pizza'
+    'Cheese Pizza',
+
+
   ];
 
   final recent_items = [
@@ -29,9 +28,10 @@ class DataSearch extends SearchDelegate<String> {
 
   @override
   ThemeData appBarTheme(BuildContext context) {
+    final darkThemeController = Get.find<DarkThemeController>();
     return ThemeData(
-      scaffoldBackgroundColor: darkMode? Colors.black: Colors.white,
-      colorScheme: darkMode? ColorScheme.dark(
+      scaffoldBackgroundColor: darkThemeController.darkMode.value? Colors.black: Colors.white,
+      colorScheme: darkThemeController.darkMode.value? ColorScheme.dark(
         primary: Colors.white
       ):ColorScheme.light(
         primary: Colors.white,
@@ -93,5 +93,4 @@ class DataSearch extends SearchDelegate<String> {
     ),
     itemCount: suggestion_items.length,);
   }
-
 }

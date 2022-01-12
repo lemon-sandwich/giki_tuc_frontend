@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:postgres/postgres.dart';
 import 'package:giki_tuc/home_page.dart';
-import 'dart:ui';
 import 'package:page_transition/page_transition.dart';
+import 'package:get/get.dart';
+import 'package:postgres/postgres.dart';
 
+import 'controllers/cart_controller.dart';
+import 'controllers/dark_theme_controller.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +17,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       home: MyHomePage(),);
   }
@@ -45,7 +47,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
-  void initState() {
+  void initState(){
+
     // TODO: implement initState
     Timer(
         const Duration(milliseconds: 1500), fadeIn);
@@ -62,6 +65,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+
+    final cartController = Get.put(CartController());
+    final darkThemeController = Get.put(DarkThemeController());
+
 
     return Scaffold(
         backgroundColor: Colors.black,

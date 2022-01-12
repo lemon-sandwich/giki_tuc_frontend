@@ -1,11 +1,9 @@
-import 'dart:async';
-import 'dart:io';
+
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
-import 'package:giki_tuc/grocery_store.dart';
-import 'package:giki_tuc/restaurant.dart';
+import 'package:get/get.dart';
+import 'package:giki_tuc/controllers/dark_theme_controller.dart';
 import 'package:giki_tuc/services/search_bar.dart';
-import 'package:giki_tuc/stationary_shop.dart';
 import 'package:giki_tuc/user_data/orders.dart';
 import 'package:giki_tuc/user_data/profile.dart';
 import 'package:page_transition/page_transition.dart';
@@ -16,6 +14,7 @@ import 'categories/ice_creams.dart';
 import 'categories/pizzas.dart';
 import 'categories/roll_parathas.dart';
 import 'categories/sandwiches.dart';
+import 'controllers/cart_controller.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -23,34 +22,24 @@ class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
 }
-bool darkMode = false;
-List<Map> collector = [];
 class _HomePageState extends State<HomePage> {
   double containerHeight = 50;
-  // Boolean variables
-  bool _searchbar = false;
-
-  // Controllers
-  TextEditingController _searchController = TextEditingController();
-
-  // Keys
-  final _search = GlobalKey<FormState>();
-
   @override
   Widget build(BuildContext context) {
-
+    final cartController = Get.find<CartController>();
+    final darkThemeController = Get.find<DarkThemeController>();
     return SafeArea(
-      child: Scaffold(
-          backgroundColor: darkMode? Colors.black: Colors.white,
+      child: Obx(() => Scaffold(
+          backgroundColor: darkThemeController.darkMode.value? Colors.black: Colors.white,
         appBar: AppBar(
           iconTheme: const IconThemeData(color: Colors.green),
          // shadowColor: Colors.grey[500],
           elevation: 0.5,
-          shadowColor: darkMode? Colors.white: Colors.black,
+          shadowColor: darkThemeController.darkMode.value? Colors.white: Colors.black,
           title: Text('Home',
         style: TextStyle(
           fontFamily: 'Headings',
-          color: darkMode? Colors.white : Colors.black
+          color: darkThemeController.darkMode.value? Colors.white : Colors.black
         ),),
         actions: [
           IconButton(
@@ -62,33 +51,34 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               setState(()
               {
-                darkMode = !darkMode;
+                darkThemeController.darkMode.value = !darkThemeController.darkMode.value;
               });
             },
             icon: Icon(
-                darkMode? Icons.wb_sunny_outlined: Icons.wb_sunny,
-              color: darkMode? Colors.white : Colors.black,
+                darkThemeController.darkMode.value? Icons.wb_sunny_outlined: Icons.wb_sunny,
+              color: darkThemeController.darkMode.value? Colors.white : Colors.black,
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Badge(
-              badgeContent: Text(collector.isEmpty? '0':collector.elementAt(0)['total'].toString()),
+              badgeContent: Text(cartController.total_items.toString()),
               position: BadgePosition.topEnd(end: 0),
               elevation: 0,
               child: IconButton(icon: Icon(
                 Icons.shopping_cart_outlined,),
                 onPressed: () {
-                  Navigator.push(context,
+                  /*Navigator.push(context,
                       PageTransition(child: Cart(), type: PageTransitionType.fade)).
-                  then((value) => null);
+                  then((value) => null);*/
+                  Get.to(()=> Cart(),transition: Transition.fade);
                 },),
             ),
           )
 
         ],
         centerTitle: true,
-          backgroundColor: darkMode? Colors.black: Colors.white,
+          backgroundColor: darkThemeController.darkMode.value? Colors.black: Colors.white,
         ),
           drawer: Drawer(
             elevation: 100,
@@ -96,7 +86,7 @@ class _HomePageState extends State<HomePage> {
             // through the options in the drawer if there isn't enough vertical
             // space to fit everything.
             child: Container(
-              color: darkMode? Colors.black: Colors.white,
+              color: darkThemeController.darkMode.value? Colors.black: Colors.white,
               child: Center(
                 child: ListView(
                   shrinkWrap: true,
@@ -109,17 +99,17 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Icon(
                             Icons.home,
-                            color: darkMode? Colors.white: Colors.black,
+                            color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                           ),
                           const SizedBox(width: 5,),
                           Text('Home'.toUpperCase(),
                           style: TextStyle(
-                              color: darkMode? Colors.white: Colors.black,
+                              color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                           ),),
                         ],
                       ),
                       onTap: () {
-                        Navigator.pop(context);
+                        Get.back();
                       },
                     ),
                     ListTile(
@@ -128,13 +118,13 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Image(
                               image: const AssetImage('images/cuisine.png'),
-                            color: darkMode? Colors.white: Colors.black,
+                            color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                             height: 25,
                           ),
                           const SizedBox(width: 5,),
                           Text('Cuisines'.toUpperCase(),
                             style: TextStyle(
-                              color: darkMode? Colors.white: Colors.black,
+                              color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                             ),),
                         ],
                       ),
@@ -149,18 +139,19 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Icon(
                               Icons.search,
-                            color: darkMode? Colors.white: Colors.black,
+                            color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                           ),
                           const SizedBox(width: 5,),
                           Text('Search'.toUpperCase(),
                             style: TextStyle(
-                              color: darkMode? Colors.white: Colors.black,
+                              color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                             ),),
                         ],
                       ),
                       onTap: () {
                         setState(() {
-                          Navigator.pop(context);
+                          //Navigator.pop(context);
+                          Get.back();
                           showSearch(context: context, delegate: DataSearch());/*
                           Navigator.push(context,
                               PageTransition(child: SearchBar(), type: PageTransitionType.fade));*/
@@ -173,12 +164,12 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Icon(
                               Icons.shopping_cart_outlined,
-                            color: darkMode? Colors.white: Colors.black,
+                            color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                           ),
                           const SizedBox(width: 5,),
                           Text('Cart'.toUpperCase(),
                             style: TextStyle(
-                              color: darkMode? Colors.white: Colors.black,
+                              color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                             ),),
                         ],
                       ),
@@ -193,18 +184,19 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Icon(
                               Icons.account_circle_rounded,
-                            color: darkMode? Colors.white: Colors.black,
+                            color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                           ),
                           const SizedBox(width: 5,),
                           Text('Profile'.toUpperCase(),
                             style: TextStyle(
-                              color: darkMode? Colors.white: Colors.black,
+                              color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                             ),),
                         ],
                       ),
                       onTap: () {
-                        Navigator.push(context,
-                            PageTransition(child: Profile(), type: PageTransitionType.fade));
+                        /*Navigator.push(context,
+                            PageTransition(child: Profile(), type: PageTransitionType.fade));*/
+                        Get.to(()=> Profile(),transition: Transition.fade);
                       },
                     ),
                     ListTile(
@@ -214,18 +206,19 @@ class _HomePageState extends State<HomePage> {
                           Image(
                               image: const AssetImage('images/cargo.png'),
                             height: 25,
-                            color: darkMode? Colors.white: Colors.black,
+                            color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                           ),
                           const SizedBox(width: 5,),
                           Text('Orders'.toUpperCase(),
                             style: TextStyle(
-                              color: darkMode? Colors.white: Colors.black,
+                              color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                             ),),
                         ],
                       ),
                       onTap: () {
-                        Navigator.push(context,
-                            PageTransition(child: Orders(), type: PageTransitionType.fade));
+                        /*Navigator.push(context,
+                            PageTransition(child: Orders(), type: PageTransitionType.fade));*/
+                        Get.to(()=> Orders(),transition: Transition.fade);
                       },
                     ),
                     ListTile(
@@ -234,12 +227,12 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Icon(
                               Icons.logout_outlined,
-                            color: darkMode? Colors.white: Colors.black,
+                            color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                           ),
                           const SizedBox(width: 5,),
                           Text('LogOut'.toUpperCase(),
                             style: TextStyle(
-                              color: darkMode? Colors.white: Colors.black,
+                              color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                             ),),
                         ],
                       ),
@@ -261,7 +254,7 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(
                   fontSize: 25,
                   fontFamily: 'Headings',
-                  color: darkMode? Colors.white: Colors.black,
+                  color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                 ),
               ),
               SizedBox(
@@ -285,7 +278,8 @@ class _HomePageState extends State<HomePage> {
                             onTap: () async{
                               await Navigator.push(context,
                               PageTransition(child: Burgers(), type: PageTransitionType.fade));
-                              setState((){});
+                              /*Get.to(()=> Burgers(),transition: Transition.fade);*/
+                              //setState((){});
                             },
                             child: Column(
                               children: [
@@ -305,7 +299,7 @@ class _HomePageState extends State<HomePage> {
                                   style : TextStyle(
                                     fontFamily: 'Headings',
                                         fontSize: 20,
-                                    color: darkMode? Colors.white: Colors.black,
+                                    color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                                   )
                                 ),
                               ],
@@ -320,8 +314,9 @@ class _HomePageState extends State<HomePage> {
                             hoverColor: Colors.transparent,
                             highlightColor: Colors.transparent,
                             onTap: () {
-                              Navigator.push(context,
-                                  PageTransition(child: const Pizzas(),type: PageTransitionType.fade));
+                              /*Navigator.push(context,
+                                  PageTransition(child: const Pizzas(),type: PageTransitionType.fade));*/
+                              Get.to(()=> Pizzas(),transition: Transition.fade);
                             },
                             child: Column(
                               children: [
@@ -341,7 +336,7 @@ class _HomePageState extends State<HomePage> {
                                     style : TextStyle(
                                       fontFamily: 'Headings',
                                       fontSize: 20,
-                                      color: darkMode? Colors.white: Colors.black,
+                                      color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                                     )
                                 ),
                               ],
@@ -356,8 +351,9 @@ class _HomePageState extends State<HomePage> {
                             hoverColor: Colors.transparent,
                             highlightColor: Colors.transparent,
                             onTap: () {
-                              Navigator.push(context,
-                                  PageTransition(child: const Sandwiches(), type: PageTransitionType.fade));
+                              /*Navigator.push(context,
+                                  PageTransition(child: const Sandwiches(), type: PageTransitionType.fade));*/
+                              Get.to(()=> Sandwiches(),transition: Transition.fade);
                             },
                             child: Column(
                               children: [
@@ -377,7 +373,7 @@ class _HomePageState extends State<HomePage> {
                                     style : TextStyle(
                                       fontFamily: 'Headings',
                                       fontSize: 20,
-                                      color: darkMode? Colors.white: Colors.black,
+                                      color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                                     )
                                 ),
                               ],
@@ -392,8 +388,9 @@ class _HomePageState extends State<HomePage> {
                             hoverColor: Colors.transparent,
                             highlightColor: Colors.transparent,
                             onTap: () {
-                              Navigator.push(context,
-                                  PageTransition(child: const IceCreams(), type: PageTransitionType.fade));
+                              /*Navigator.push(context,
+                                  PageTransition(child: const IceCreams(), type: PageTransitionType.fade));*/
+                              Get.to(()=> IceCreams(),transition: Transition.fade);
                             },
                             child: Column(
                               children: [
@@ -413,7 +410,7 @@ class _HomePageState extends State<HomePage> {
                                     style : TextStyle(
                                       fontFamily: 'Headings',
                                       fontSize: 20,
-                                      color: darkMode? Colors.white: Colors.black,
+                                      color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                                     )
                                 ),
                               ],
@@ -428,8 +425,9 @@ class _HomePageState extends State<HomePage> {
                             hoverColor: Colors.transparent,
                             highlightColor: Colors.transparent,
                             onTap: () {
-                              Navigator.push(context,
-                                  PageTransition(child: const RollParathas(), type: PageTransitionType.fade));
+                              /*Navigator.push(context,
+                                  PageTransition(child: const RollParathas(), type: PageTransitionType.fade));*/
+                              Get.to(()=> RollParathas(),transition: Transition.fade);
                             },
                             child: Column(
                               children: [
@@ -449,7 +447,7 @@ class _HomePageState extends State<HomePage> {
                                     style : TextStyle(
                                       fontFamily: 'Headings',
                                       fontSize: 20,
-                                      color: darkMode? Colors.white: Colors.black,
+                                      color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                                     )
                                 ),
                               ],
@@ -464,8 +462,9 @@ class _HomePageState extends State<HomePage> {
                             hoverColor: Colors.transparent,
                             highlightColor: Colors.transparent,
                             onTap: () {
-                              Navigator.push(context,
-                                  PageTransition(child: const Fries(), type: PageTransitionType.fade));
+                              /*Navigator.push(context,
+                                  PageTransition(child: const Fries(), type: PageTransitionType.fade));*/
+                              Get.to(()=> Fries(),transition: Transition.fade);
                             },
                             child: Column(
                               children: [
@@ -485,7 +484,7 @@ class _HomePageState extends State<HomePage> {
                                     style : TextStyle(
                                       fontFamily: 'Headings',
                                       fontSize: 20,
-                                      color: darkMode? Colors.white: Colors.black,
+                                      color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                                     )
                                 ),
                               ],
@@ -504,7 +503,7 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(
                   fontSize: 25,
                   fontFamily: 'Headings',
-                  color: darkMode? Colors.white: Colors.black,
+                  color: darkThemeController.darkMode.value? Colors.white: Colors.black,
                 ),
               ),
               Container(
@@ -523,7 +522,7 @@ class _HomePageState extends State<HomePage> {
         )
 
 
-      ),
+      )),
     );
   }
 }
