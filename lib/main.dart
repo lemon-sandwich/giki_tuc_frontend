@@ -4,7 +4,6 @@ import 'package:giki_tuc/home_page.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:get/get.dart';
 import 'package:postgres/postgres.dart';
-
 import 'controllers/cart_controller.dart';
 import 'controllers/dark_theme_controller.dart';
 

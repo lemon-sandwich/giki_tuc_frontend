@@ -275,8 +275,8 @@ class _HomePageState extends State<HomePage> {
                             splashColor: Colors.transparent,
                             hoverColor: Colors.transparent,
                             highlightColor: Colors.transparent,
-                            onTap: () async{
-                              await Navigator.push(context,
+                            onTap: () {
+                              Navigator.push(context,
                               PageTransition(child: Burgers(), type: PageTransitionType.fade));
                               /*Get.to(()=> Burgers(),transition: Transition.fade);*/
                               //setState((){});

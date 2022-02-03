@@ -4,6 +4,7 @@ import 'package:get/get_instance/src/extension_instance.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:get/get_navigation/src/routes/transitions_type.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:giki_tuc/apis/burgers_api.dart';
 import 'package:giki_tuc/services/payment.dart';
 import 'controllers/cart_controller.dart';
 import 'controllers/dark_theme_controller.dart';
@@ -190,8 +191,16 @@ class _CartState extends State<Cart> {
               )
             ],
           ),
-          onPressed: () {
-            Get.to(()=> Payment(),transition: Transition.fade);
+          onPressed: (){
+            for(int i=0;i<cartController.burgers.length;i++)
+            {
+              if(cartController.burgers[i] > 0)
+                {
+                 //updateBurger(cartController.burgerType[i],i,cartController.burgers[i]);
+                }
+            }
+            //updateBurger(items)
+            //Get.to(()=> Payment(),transition: Transition.fade);
           },
         ),
       ),

@@ -139,7 +139,7 @@ class CartController extends GetxController{
     return total;
     }
 
-  String invoice(List burgerType,List<int> burgerNumber,List<List<bool>> cheese,List<List<bool>> fries){
+/*  String invoice(List burgerType,List<int> burgerNumber,List<List<bool>> cheese,List<List<bool>> fries){
     String invoiceDetail = '';
     int sum = 0;
     int preferenceTotal = 0;
@@ -155,5 +155,5 @@ class CartController extends GetxController{
       total = total + sum;
     }
     return invoiceDetail;
-  }
+  }*/
 }
